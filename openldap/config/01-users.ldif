@@ -1,0 +1,37 @@
+dn: ou=users,dc=esti,dc=lab
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=esti,dc=lab
+objectClass: organizationalUnit
+ou: groups
+
+dn: uid=alice,ou=users,dc=esti,dc=lab
+objectClass: inetOrgPerson
+uid: alice
+cn: Alice Dupont
+sn: Dupont
+mail: alice@esti.lab
+userPassword: {SSHA}p0qwQqK22J47YAh1Cmd5jSnU9OWWWiTC
+
+dn: uid=bob,ou=users,dc=esti,dc=lab
+objectClass: inetOrgPerson
+uid: bob
+cn: Bob Martin
+sn: Martin
+mail: bob@esti.lab
+userPassword: {SSHA}6oK1K9Qln/sM+xuypZmO6WGraU9wuo8v
+
+dn: uid=eve,ou=users,dc=esti,dc=lab
+objectClass: inetOrgPerson
+uid: eve
+cn: Eve Durand
+sn: Durand
+mail: eve@esti.lab
+userPassword: {SSHA}pl5xgbUev3LvzBMyyWx727/w7+Tjh0rF
+
+dn: cn=vpn-users,ou=groups,dc=esti,dc=lab
+objectClass: groupOfNames
+cn: vpn-users
+member: uid=alice,ou=users,dc=esti,dc=lab
+member: uid=bob,ou=users,dc=esti,dc=lab

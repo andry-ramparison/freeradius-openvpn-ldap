@@ -1,0 +1,8 @@
+# Compte de lecture pour FreeRADIUS (recherche uniquement, aucune ecriture)
+# Mot de passe de test : Radius#Reader2026 (stocke hache en SSHA)
+dn: cn=radius-reader,dc=esti,dc=lab
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: radius-reader
+description: Compte de service lu par FreeRADIUS pour interroger l'annuaire
+userPassword: {SSHA}/cSLMIZeYTeI1oRbraapD1QZLRfemBXS

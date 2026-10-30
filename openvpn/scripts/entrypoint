@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+: "${RADIUS_SECRET:?RADIUS_SECRET is required}"
+: "${RADIUS_SERVER:=freeradius}"
+printf '%s:1812 %s 3\n' "$RADIUS_SERVER" "$RADIUS_SECRET" > /etc/pam_radius_auth.conf
+chgrp nogroup /etc/pam_radius_auth.conf
+chmod 0640 /etc/pam_radius_auth.conf
+chmod 0755 /etc/openvpn/pki /etc/openvpn/pki/issued
+chmod 0644 /etc/openvpn/pki/ca.crt /etc/openvpn/pki/dh.pem \
+    /etc/openvpn/pki/crl.pem /etc/openvpn/pki/issued/server.crt
+mkdir -p /var/lib/openvpn /var/log/openvpn
+exec openvpn --config /etc/openvpn/server.conf

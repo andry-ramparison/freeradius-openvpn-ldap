@@ -38,6 +38,9 @@ services:
     image: freeradius/freeradius-server:3.2.3
     container_name: p16-freeradius
     command: -X
+    ports:
+      - "127.0.0.1:1812:1812/udp"
+      - "127.0.0.1:1813:1813/udp"
     environment:
       LDAP_READER_PASSWORD: ${LDAP_READER_PASSWORD}
       RADIUS_SECRET: ${RADIUS_SECRET}
@@ -45,15 +48,38 @@ services:
       - ./freeradius/config/mods-enabled/ldap:/etc/freeradius/mods-enabled/ldap:ro
       - ./freeradius/config/sites-available/default:/etc/freeradius/sites-available/default:ro
       - ./freeradius/config/clients.conf:/etc/freeradius/clients.conf:ro
+      - radius_logs:/var/log/radius
     depends_on:
       ldap:
         condition: service_healthy
     networks: [lab]
     restart: on-failure
 
+  openvpn:
+    build: ./openvpn
+    container_name: p16-openvpn
+    cap_add: [NET_ADMIN]
+    sysctls:
+      net.ipv4.ip_forward: "1"
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "1194:1194/udp"
+    volumes:
+      - ./openvpn/config/server.conf:/etc/openvpn/server.conf:ro
+      - openvpn_pki:/etc/openvpn/pki
+    environment:
+      RADIUS_SECRET: ${RADIUS_SECRET}
+      RADIUS_SERVER: freeradius
+    depends_on: [freeradius]
+    networks: [lab]
+    restart: unless-stopped
+
 volumes:
   ldap_data:
   ldap_config:
+  openvpn_pki:
+  radius_logs:
 
 networks:
   lab:

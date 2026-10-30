@@ -1,0 +1,16 @@
+client
+dev tun
+proto udp
+remote VOTRE_IP_OU_DNS 1194
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+auth-user-pass
+auth-nocache
+verb 3
+
+<ca>
+# Coller ici le contenu de openvpn_pki/ca.crt
+</ca>

@@ -1,0 +1,3 @@
+# PAM auth OpenVPN: les identifiants sont verifies par FreeRADIUS puis LDAP.
+auth    required pam_radius_auth.so
+account required pam_permit.so

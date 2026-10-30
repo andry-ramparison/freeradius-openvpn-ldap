@@ -1,0 +1,45 @@
+#!/bin/sh
+set -eu
+
+case "${script_type:-}" in
+    client-connect) event=start ;;
+    client-disconnect) event=stop ;;
+    *) echo "expected OpenVPN client-connect or client-disconnect event" >&2; exit 2 ;;
+esac
+case "$event" in
+    start) status=Start ;;
+    stop) status=Stop ;;
+    *) echo "invalid accounting event" >&2; exit 2 ;;
+esac
+
+read -r radius_endpoint radius_secret _ < /etc/pam_radius_auth.conf
+RADIUS_SERVER=${RADIUS_SERVER:-${radius_endpoint%:1812}}
+RADIUS_SECRET=${RADIUS_SECRET:-$radius_secret}
+: "${RADIUS_SERVER:?RADIUS_SERVER is required}"
+: "${RADIUS_SECRET:?RADIUS_SECRET is required}"
+user=${common_name:-${username:-unknown}}
+session=${username:-$user}-${ifconfig_pool_remote_ip:-unknown}
+client_ip=${trusted_ip:-0.0.0.0}
+client_port=${trusted_port:-0}
+rx=${bytes_received:-0}
+tx=${bytes_sent:-0}
+duration=${time_duration:-0}
+
+# Attributes are emitted as RADIUS values; reject control characters and quotes.
+case "$user$session$client_ip$client_port$rx$tx$duration" in
+    *[!a-zA-Z0-9_.:-]*) echo "invalid accounting attribute" >&2; exit 2 ;;
+esac
+
+{
+    printf 'User-Name = "%s"\n' "$user"
+    printf 'Acct-Status-Type = %s\n' "$status"
+    printf 'Acct-Session-Id = "%s"\n' "$session"
+    printf 'Framed-IP-Address = %s\n' "${ifconfig_pool_remote_ip:-10.8.0.0}"
+    printf 'NAS-IP-Address = %s\n' "$client_ip"
+    printf 'NAS-Port = %s\n' "$client_port"
+    if [ "$event" = stop ]; then
+        printf 'Acct-Session-Time = %s\n' "$duration"
+        printf 'Acct-Input-Octets = %s\n' "$rx"
+        printf 'Acct-Output-Octets = %s\n' "$tx"
+    fi
+} | radclient -x "$RADIUS_SERVER:1813" acct "$RADIUS_SECRET"

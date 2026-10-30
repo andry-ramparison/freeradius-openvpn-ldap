@@ -1,0 +1,42 @@
+server default {
+    listen {
+        type = auth
+        ipaddr = *
+        port = 0
+    }
+    listen {
+        type = acct
+        ipaddr = *
+        port = 0
+    }
+    authorize {
+        filter_username
+        preprocess
+        ldap
+        if (ok || updated) {
+            if (!(LDAP-Group == "vpn-users")) {
+                reject
+            }
+            update control {
+                Auth-Type := LDAP
+            }
+        }
+    }
+    authenticate {
+        Auth-Type LDAP {
+            ldap
+        }
+    }
+    preacct {
+        preprocess
+        acct_unique
+    }
+    accounting {
+        detail
+    }
+    post-auth {
+        Post-Auth-Type REJECT {
+            attr_filter.access_reject
+        }
+    }
+}

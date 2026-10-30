@@ -1,0 +1,19 @@
+ldap {
+    server = 'ldap'
+    port = 389
+    identity = 'cn=radius-reader,dc=esti,dc=lab'
+    password = "$ENV{LDAP_READER_PASSWORD}"
+    base_dn = 'dc=esti,dc=lab'
+
+    user {
+        base_dn = "ou=users,${..base_dn}"
+        filter = "(uid=%{%{Stripped-User-Name}:-%{User-Name}})"
+    }
+
+    group {
+        base_dn = "ou=groups,${..base_dn}"
+        filter = '(objectClass=groupOfNames)'
+        name_attribute = cn
+        membership_filter = "(|(&(objectClass=groupOfNames)(member=%{control:Ldap-UserDn})))"
+    }
+}

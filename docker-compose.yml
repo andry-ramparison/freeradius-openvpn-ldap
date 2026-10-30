@@ -1,6 +1,12 @@
 services:
   ldap:
     image: osixia/openldap:1.5.0
+    healthcheck:
+      test: ["CMD-SHELL", "ldapsearch -x -H ldap://localhost -b dc=esti,dc=lab -D cn=admin,dc=esti,dc=lab -w \"$$LDAP_ADMIN_PASSWORD\" -s base dn || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
     container_name: p16-ldap
     environment:
       LDAP_ORGANISATION: "ESTI Lab"
@@ -27,6 +33,23 @@ services:
       - "127.0.0.1:8080:80"
     depends_on: [ldap]
     networks: [lab]
+
+  freeradius:
+    image: freeradius/freeradius-server:3.2.3
+    container_name: p16-freeradius
+    command: -X
+    environment:
+      LDAP_READER_PASSWORD: ${LDAP_READER_PASSWORD}
+      RADIUS_SECRET: ${RADIUS_SECRET}
+    volumes:
+      - ./freeradius/config/mods-enabled/ldap:/etc/freeradius/mods-enabled/ldap:ro
+      - ./freeradius/config/sites-available/default:/etc/freeradius/sites-available/default:ro
+      - ./freeradius/config/clients.conf:/etc/freeradius/clients.conf:ro
+    depends_on:
+      ldap:
+        condition: service_healthy
+    networks: [lab]
+    restart: on-failure
 
 volumes:
   ldap_data:
